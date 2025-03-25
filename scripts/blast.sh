@@ -1,7 +1,6 @@
 #!/bin/bash
 #make REBASE database
 #makeblastdb -in dna_seqs.fasta -dbtype nucl -out rebase_dna
-#makeblastdb -in protein_seqs.fastsa -dbtype nucl -out rebase_protein
 
 ls gbk > list.txt
 
