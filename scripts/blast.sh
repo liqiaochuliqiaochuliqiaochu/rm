@@ -1,5 +1,6 @@
 #!/bin/bash
 #make REBASE database
+#python3 makedb.py
 #makeblastdb -in dna_seqs.fasta -dbtype nucl -out rebase_dna
 
 ls gbk > list.txt
