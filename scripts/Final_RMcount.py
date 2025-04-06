@@ -14,7 +14,7 @@ def read_content(filename):
 
 # Read input files
 list_data = read_content("list.txt")
-ref = read_content("/home5/qli37/24RM/final/dna.txt")
+ref = read_content("dna_seqs.txt")
 
 # Open output file for writing results
 with open("FinalRM.txt", 'w') as f1:
@@ -38,31 +38,33 @@ with open("FinalRM.txt", 'w') as f1:
                     t, st = "Unknown", ""
 
                     # Find RM system type from the reference file
-                    for i in range(0, len(ref) - 1, 2):
-                        info = ref[i][0].split(">REBASE:")[1]
-                        ref_name = info.split("_")[0]
+                    for i in range(0, len(ref) - 1):
+                        if ">REBASE:" in ref[i][0]:
+                            info = ref[i][1]
+                            ref_name = ref[i][0].split(">REBASE:")[1]
+                            if row[1].split("_")[1] == ref_name:
+                                try:
+                                    t = info.split("Type ")[1].split(" ")[0]
+                                except:
+                                    t = 'orphan' if "orphan" in info else "Unknown"
 
-                        if row[1].split("_")[1] == ref_name:
-                            try:
-                                t = info.split("Type_")[1].split("_")[0]
-                            except:
-                                t = 'orphan' if "orphan" in info else "Unknown"
-
-                            # Determine subtype
-                            if "/" in ref_name:
-                                st = "RM"
-                            elif "." in ref_name:
-                                st = ref_name.split(".")[0]
-                                st = 'M' if 'M' in st else 'S' if 'S' in st else 'R' if 'R' in st else 'C'
-                                if st == 'C':
-                                    t = "III"
-                            elif "restriction" in info:
-                                st = "R"
-                            elif "methyltransferase" in info:
-                                st = "M"
-                            elif "control" in info:
-                                st, t = "C", "III"
-                            break
+                                # Determine subtype
+                                if "/" in ref_name:
+                                    st = "RM"
+                                elif "." in ref_name:
+                                    st = ref_name.split(".")[0]
+                                    st = 'M' if 'M' in st else 'S' if 'S' in st else 'R' if 'R' in st else 'C'
+                                    if st == 'C':
+                                        t = "III"
+                                elif "restriction" in info:
+                                    st = "R"
+                                elif "methyltransferase" in info:
+                                    st = "M"
+                                elif "control" in info:
+                                    st, t = "C", "III"
+                                break
+                            else:
+                                continue
 
                     arr.append([row[0], row[1], t, st, "_".join(row[2:6])])
                     seq_name.add(row[0])
