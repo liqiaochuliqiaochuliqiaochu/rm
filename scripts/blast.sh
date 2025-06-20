@@ -68,6 +68,9 @@ else
     python3 Final_RMcount.py
 fi
 
+mkdir sequence 
+python3 Final_ExtractSequence.py
+
 echo "Pipeline finished!"
 
 
