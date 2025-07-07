@@ -2,7 +2,7 @@ import os
 from Bio import SeqIO
 
 # Constants
-flank = 1000 #change this value to change upstream/downstream length
+flank = 2000  # change this value to change upstream/downstream length
 rm_folder = "FinalRM"
 gbk_folder = "gbk"
 output_folder = "sequence"
@@ -29,14 +29,11 @@ with open(list_file) as lf:
             print(f"GenBank file not found for {base_name}, skipping.")
             continue
 
-        # Load GenBank file
         try:
-            record = SeqIO.read(gbk_path, "genbank")
-        except:
-            record = next(SeqIO.parse(gbk_path, "genbank"))
-            print(f"Warning: multiple genbnk records exist for {base_name}, please manually check." )
-        genome_seq = record.seq
-        genome_len = len(genome_seq)
+            records = list(SeqIO.parse(gbk_path, "genbank"))
+        except Exception as e:
+            print(f"Error reading {gbk_path}: {e}")
+            continue
 
         with open(result_path) as infile, open(output_path, "w") as outfile:
             for line in infile:
@@ -44,37 +41,45 @@ with open(list_file) as lf:
                 if not full_line:
                     continue
                 try:
-                    # Get position from the first word in the line
                     loc = full_line.split()[0]
                     start_str, end_str = loc.split("_")
                     start, end = int(start_str), int(end_str)
+                    gene_found = False
 
-                    # Calculate sequence boundaries
-                    region_start = max(0, start - flank)
-                    region_end = min(genome_len, end + flank)
+                    for record in records:
+                        for feature in record.features:
+                            if feature.type == "CDS":
+                                feat_start = int(feature.location.start)
+                                feat_end = int(feature.location.end)
 
-                    # Extract gene and flanking sequences
-                    gene_seq = genome_seq[start:end]
-                    region_seq = genome_seq[region_start:region_end]
+                                # Match by position
+                                if feat_start == start - 1 and feat_end == end:
+                                    gene_seq = feature.extract(record.seq)
 
-                    # Detect strand direction
-                    strand = None
-                    for feature in record.features:
-                        if feature.type == "gene":
-                            if (feature.location.start == start and
-                                feature.location.end == end):
-                                strand = feature.location.strand
-                                break
+                                    # Determine strand
+                                    strand = feature.location.strand
+                                    if strand == -1:
+                                        gene_seq = gene_seq.reverse_complement()
 
-                    # Reverse complement if on negative strand
-                    if strand == -1:
-                        gene_seq = gene_seq.reverse_complement()
-                        region_seq = region_seq.reverse_complement()
+                                    # Flanking region (based on genomic positions)
+                                    genome_len = len(record.seq)
+                                    region_start = max(0, start - flank)
+                                    region_end = min(genome_len, end + flank)
+                                    region_seq = record.seq[region_start:region_end]
+                                    if strand == -1:
+                                        region_seq = region_seq.reverse_complement()
 
-                    # Write gene-only sequence
-                    outfile.write(f">{full_line}\n{gene_seq}\n")
-                    # Write sequence with flanks
-                    outfile.write(f">{full_line} +flank\n{region_seq}\n")
+                                    # Write outputs
+                                    outfile.write(f">{full_line}\n{gene_seq}\n")
+                                    outfile.write(f">{full_line} +flank\n{region_seq}\n")
+
+                                    gene_found = True
+                                    break
+                        if gene_found:
+                            break
+
+                    if not gene_found:
+                        print(f"CDS {start}_{end} not found in any contig for {base_name}")
 
                 except Exception as e:
                     print(f"Error processing line: {full_line} in {result_path}")
