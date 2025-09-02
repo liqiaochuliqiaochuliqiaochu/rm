@@ -75,12 +75,7 @@ with open("FinalRM.txt", 'w') as f1:
 
         # Write individual results
         with open(f"FinalRM/{name}.txt", 'w') as f:
-            type_counts = {
-                "IM": 0, "IS": 0, "IR": 0, "IRM": 0, "IIM": 0, "IIR": 0, "IIRM": 0,
-                "IIS": 0, "IIIM": 0, "IIIS": 0, "IIIR": 0, "IIIRM": 0, "IVR": 0,
-                "Other": 0, "orphan1": 0, "orphan2": 0, "orphan3": 0, "orphan4": 0
-            }
-
+            
             for record in arr:
                 f.write("\t".join(record) + "\n")
                 ty = record[2] + record[3]
@@ -90,13 +85,5 @@ with open("FinalRM.txt", 'w') as f1:
                 else:
                     type_counts["Other"] += 1
 
-            # Calculate type classifications
-            typeI = min(type_counts["IR"], type_counts["IM"], type_counts["IS"]) if type_counts["IR"] else type_counts["orphan1"]
-            typeII = type_counts["IIR"] if type_counts["IIR"] else type_counts["orphan2"]
-            typeIII = min(type_counts["IIIR"], type_counts["IIIM"]) if type_counts["IIIR"] else type_counts["orphan3"]
-            typeIV = type_counts["IVR"] if type_counts["IVR"] else type_counts["orphan4"]
+         
 
-            total = typeI + type_counts["IRM"] + typeII + type_counts["IIRM"] + typeIII + type_counts["IIIRM"] + typeIV
-
-            # Write summary to FinalRM.txt
-            f1.write(f"{name}\t{typeI}\t{typeII}\t{typeIII}\t{typeIV}\t{total}\n")
