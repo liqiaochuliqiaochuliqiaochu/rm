@@ -65,7 +65,8 @@ if [[ -f "BLASTP.sh" ]]; then
 else
     echo "Warning: BLASTP.sh not found. Skipping."
     echo "Running Final_RMcount.py directly..."
-    python3 Final_RMcount.py
+    python3 Final_RM.py
+    python3 Final_RMseq.py
 fi
 
 mkdir sequence 
